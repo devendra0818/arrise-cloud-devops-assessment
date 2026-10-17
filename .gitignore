@@ -1,0 +1,76 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Terraform
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Local .terraform plugin/module cache directories (can be re-created via `terraform init`)
+**/.terraform/
+.terraform/
+
+# Terraform lock file – commit this if you want reproducible provider versions;
+# leave it ignored if you prefer each engineer to resolve their own locks.
+# Recommendation: COMMIT the lock file. Comment out the line below to do so.
+# .terraform.lock.hcl
+
+# Local state files (state is stored remotely in S3; never commit local state)
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+
+# Crash log output
+crash.log
+crash.*.log
+
+# Terraform plan output files (may contain sensitive data)
+*.tfplan
+*.plan
+
+# Override files (used for local overrides; not meant to be committed)
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Sensitive variable files
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Auto-loaded var files – never commit files containing secrets/credentials.
+# The env/sandbox/variables.tfvars files in this repo contain only non-secret
+# placeholder values and ARE committed intentionally.
+*.tfvars.json
+secrets.tfvars
+secret.tfvars
+*secrets*.tfvars
+*credentials*.tfvars
+
+# ──────────────────────────────────────────────────────────────────────────────
+# OS / Editor artefacts
+# ──────────────────────────────────────────────────────────────────────────────
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains / IntelliJ
+.idea/
+*.iml
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Misc
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
