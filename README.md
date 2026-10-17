@@ -23,19 +23,13 @@ arrise-cloud-devops-assessment/
 │   │   └── ec2_instance/         # Reusable EC2 instance implementation
 │   └── env/
 │       └── sandbox/
-│           ├── backend.tfvars    # S3 bucket, key, DynamoDB table
+│           ├── backend.tfvars    # S3 bucket and key
 │           └── variables.tfvars  # AMI, subnet, instance map values
 │
 ├── task2-remote-state/
-│   ├── versions.tf               # Empty backend "s3" {}
-│   ├── provider.tf
-│   ├── variables.tf
-│   ├── bootstrap.tf              # Creates arrise-devops-tfstate bucket + DynamoDB lock table
-│   ├── NOTES.md                  # Race-condition explanation + S3/DynamoDB solution
-│   └── env/
-│       └── sandbox/
-│           ├── backend.tfvars
-│           └── variables.tfvars
+│   ├── versions.tf               # S3 backend with S3-native lockfile
+│   ├── NOTES.md                  # Local-state race and remote-lock explanation
+│   └── env/sandbox/backend.tfvars
 │
 ├── task3-iam-cross-account/
 │   ├── versions.tf
@@ -92,21 +86,8 @@ terraform plan -var-file=env/sandbox/variables.tfvars
 terraform apply -var-file=env/sandbox/variables.tfvars
 ```
 
-### Special case: Task 2 – Bootstrap first
-
-Task 2 creates the S3 bucket and DynamoDB table that all other tasks depend on.
-Run it **once** with a local backend before migrating state:
-
-```bash
-cd task2-remote-state
-
-# Step 1: initialize locally while skipping the configured S3 backend
-terraform init -backend=false
-terraform apply -var-file=env/sandbox/variables.tfvars
-
-# Step 2: create/migrate into the S3 backend (the S3 bucket and lock table now exist)
-terraform init -backend-config=env/sandbox/backend.tfvars -migrate-state
-```
+Task 2 has no managed AWS resources of its own; it demonstrates the S3 backend and lock
+configuration. Initialize it with `terraform init -backend-config=env/sandbox/backend.tfvars`.
 
 ---
 
@@ -122,7 +103,15 @@ Every task writes its state to a unique key in the **`arrise-devops-tfstate`** b
 | Task 4 | `task4-iam-policy/sandbox/terraform.tfstate` |
 | Task 5 | `task5-bug-fix/sandbox/terraform.tfstate` |
 
-State locking is handled by the **`arrise-terraform-state-lock`** DynamoDB table.
+Task 2 uses S3 state locking with `use_lockfile = true`. Terraform creates a `.tflock`
+object beside the state while a state-writing operation is in progress. HashiCorp has
+deprecated DynamoDB-based S3 locking in favor of S3 lockfiles; Task 2 does not provision a
+DynamoDB lock table.
+
+With separate local state files, two people can plan from different snapshots, make
+conflicting changes, and leave state files that disagree with AWS. Task 2 uses the shared
+S3 bucket already used by Task 1, with its own state key. The S3 lockfile prevents
+concurrent Terraform runs using that backend state from writing at the same time.
 
 ---
 
@@ -144,7 +133,7 @@ terraform apply  -var-file=env/production/variables.tfvars
 | Resource | Name |
 |----------|------|
 | Terraform state bucket | `arrise-devops-tfstate` |
-| DynamoDB lock table | `arrise-terraform-state-lock` |
+| DynamoDB lock table (Tasks 3–5) | `arrise-terraform-state-lock` |
 | EC2 instances | `arrise-<role>` (e.g. `arrise-db-server`) |
 | IAM groups | `arrise-group1`, `arrise-group2` |
 | IAM users | `arrise-engine`, `arrise-ci`, `arrise-alice`, `arrise-bob` |
@@ -161,6 +150,6 @@ terraform apply  -var-file=env/production/variables.tfvars
 
 | Tool | Version |
 |------|---------|
-| Terraform | ≥ 1.3.0 |
+| Terraform | ≥ 1.10.0 for Task 2 S3 lockfiles; ≥ 1.3.0 for other tasks |
 | AWS CLI | ≥ 2.x |
 | AWS Provider | ~> 5.0 |

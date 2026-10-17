@@ -1,17 +1,21 @@
 # Task 2 Remote State and Locking
 
-With separate local state files, two engineers can plan from different snapshots, both
-create the same resources, and leave different state files behind. The state can then
-disagree with the resources in AWS. A shared local file also does not provide reliable
-coordination across machines.
+Task 1 already uses the shared `arrise-devops-tfstate` S3 bucket. This task reuses that
+bucket for its own state key and enables the S3 backend lockfile with `use_lockfile = true`.
+Terraform writes a temporary `.tflock` object beside the state object while a state-writing
+operation is in progress. No DynamoDB table is configured or needed for this lockfile.
 
-This configuration stores the authoritative state in S3 and enables bucket versioning
-and server-side encryption. Terraform uses the DynamoDB table with the `LockID` partition
-key to coordinate operations. A concurrent state-changing run waits or fails while the
-lock is held, preventing simultaneous state writes. Locking only coordinates Terraform
-runs using this backend; it does not prevent manual AWS changes. Terraform releases the
-lock after an operation, though a stale lock may need manual recovery.
+With independent local state files, two people can plan from different snapshots, both
+change the same infrastructure, and leave their state files disagreeing with AWS. A shared
+S3 state object avoids separate state copies, and its lockfile prevents concurrent
+Terraform operations from writing that state at the same time. Locking only coordinates
+Terraform runs that use this backend; it does not prevent manual AWS changes.
 
-The state bucket and lock table must exist before the S3 backend can initialize. Bootstrap
-them with `terraform init -backend=false` and `terraform apply -var-file=env/sandbox/variables.tfvars`,
-then initialize the configured backend and migrate the local state as shown in the README.
+Initialize this task with:
+
+```bash
+terraform init -backend-config=env/sandbox/backend.tfvars
+```
+
+HashiCorp has deprecated DynamoDB-based S3 locking in favor of S3 lockfiles. The backend
+uses S3 locking directly, so this task does not provision a DynamoDB lock table.
