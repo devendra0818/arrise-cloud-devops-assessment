@@ -1,4 +1,5 @@
 terraform {
+  # S3 native state locking (use_lockfile) requires Terraform 1.10 or newer.
   required_version = ">= 1.3.0"
 
   required_providers {
