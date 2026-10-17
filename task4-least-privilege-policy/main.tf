@@ -6,10 +6,10 @@ locals {
   }
 }
 
-# ── Custom least-privilege IAM policy for the arrise-ci user ──────────────────
+# Custom least-privilege IAM policy for the Task 3 `ci` user.
 resource "aws_iam_policy" "arrise_ci_policy" {
   name        = "arrise-ci-least-privilege-policy"
-  description = "Least-privilege policy for arrise-ci: ECR push, ECS deploy, S3 read-only"
+  description = "Least-privilege policy for ci: ECR push, ECS deploy, S3 read-only"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -36,18 +36,33 @@ resource "aws_iam_policy" "arrise_ci_policy" {
       },
       # 3. ECS – register a new task definition revision and update the service
       {
-        Sid    = "ECSDeployArriseService"
-        Effect = "Allow"
-        Action = [
-          "ecs:RegisterTaskDefinition",
-          "ecs:UpdateService",
-          "ecs:DescribeServices",
-          "ecs:DescribeTaskDefinition"
-        ]
-        Resource = [
-          "arn:aws:ecs:${var.aws_region}:${var.account_id}:service/${var.ecs_cluster_name}/${var.ecs_service_name}",
-          "arn:aws:ecs:${var.aws_region}:${var.account_id}:task-definition/${var.ecs_task_family}:*"
-        ]
+        Sid      = "ECSRegisterTaskDefinition"
+        Effect   = "Allow"
+        Action   = "ecs:RegisterTaskDefinition"
+        Resource = "arn:aws:ecs:${var.aws_region}:${var.account_id}:task-definition/${var.ecs_task_family}:*"
+      },
+      {
+        Sid      = "ECSUpdateServiceTaskDefinition"
+        Effect   = "Allow"
+        Action   = "ecs:UpdateService"
+        Resource = "arn:aws:ecs:${var.aws_region}:${var.account_id}:service/${var.ecs_cluster_name}/${var.ecs_service_name}"
+        Condition = {
+          ArnLike = {
+            "ecs:task-definition" = "arn:aws:ecs:${var.aws_region}:${var.account_id}:task-definition/${var.ecs_task_family}:*"
+          }
+        }
+      },
+      {
+        Sid      = "ECSDescribeService"
+        Effect   = "Allow"
+        Action   = "ecs:DescribeServices"
+        Resource = "arn:aws:ecs:${var.aws_region}:${var.account_id}:service/${var.ecs_cluster_name}/${var.ecs_service_name}"
+      },
+      {
+        Sid      = "ECSDescribeTaskDefinition"
+        Effect   = "Allow"
+        Action   = "ecs:DescribeTaskDefinition"
+        Resource = "*" # ECS does not support resource-level scoping for this action.
       },
       # 4. iam:PassRole – required for ECS task definitions; scoped by service condition
       {
@@ -88,13 +103,13 @@ resource "aws_iam_policy" "arrise_ci_policy" {
   })
 }
 
-# Attach the custom policy to the arrise-ci user
+# Attach the custom policy to the Task 3 `ci` user.
 resource "aws_iam_user_policy_attachment" "arrise_ci_attach" {
-  user       = "arrise-ci"
+  user       = "ci"
   policy_arn = aws_iam_policy.arrise_ci_policy.arn
 }
 
 output "arrise_ci_policy_arn" {
-  description = "ARN of the arrise-ci least-privilege policy"
+  description = "ARN of the least-privilege policy attached to ci"
   value       = aws_iam_policy.arrise_ci_policy.arn
 }

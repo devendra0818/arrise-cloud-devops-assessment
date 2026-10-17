@@ -3,6 +3,11 @@ variable "aws_region" {
   type        = string
 }
 
+variable "aws_profile" {
+  description = "AWS CLI profile for the account containing the ci user and ECS resources"
+  type        = string
+}
+
 variable "environment" {
   description = "Deployment environment"
   type        = string

@@ -25,7 +25,7 @@ instances = {
   "db-server" = {
     instance_type   = "t3.small"
     volume_type     = "io1" # Satisfies the io1/io2 requirement
-    volume_size     = 50
+    volume_size     = 60    # 3,000 io1 IOPS requires at least 60 GiB (50 IOPS/GiB max).
     key_name        = "arrise-db-server-key"
     prevent_destroy = true # Protected – see NOTES.md
   }

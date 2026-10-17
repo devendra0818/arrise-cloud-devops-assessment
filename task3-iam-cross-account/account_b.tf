@@ -1,17 +1,19 @@
 resource "aws_iam_role" "arrise_roleC" {
   provider = aws.account_b
-  name     = "arrise-roleC"
+  name     = "roleC"
+
+  depends_on = [aws_iam_role.roleB]
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect    = "Allow"
       Action    = "sts:AssumeRole"
-      Principal = { AWS = "arn:aws:iam::${var.account_a_id}:role/arrise-roleB" }
+      Principal = { AWS = "arn:aws:iam::${var.account_a_id}:role/roleB" }
     }]
   })
 
-  tags = merge(local.common_tags, { Name = "arrise-roleC" })
+  tags = merge(local.common_tags, { Name = "roleC" })
 }
 
 resource "aws_iam_role_policy" "arrise_roleC_s3" {

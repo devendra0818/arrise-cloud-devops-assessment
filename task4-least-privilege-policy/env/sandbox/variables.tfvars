@@ -6,21 +6,22 @@
 # ─────────────────────────────────────────────────────────────
 
 aws_region  = "us-east-1"
+aws_profile = "arrise-account-a"
 environment = "sandbox"
 owner       = "arrise-devops-team"
 
 # Replace with your actual Account A ID
 account_id = "000000000000"
 
-# ECR repository that arrise-ci can push Docker images to
+# ECR repository that ci can push Docker images to
 ecr_repository_name = "arrise-app"
 
-# ECS resources arrise-ci can deploy to
+# ECS resources ci can deploy to
 ecs_cluster_name = "arrise-cluster"
 ecs_service_name = "arrise-service"
 ecs_task_family  = "arrise-task"
 
-# IAM roles that arrise-ci is allowed to pass to ECS (and ONLY to ECS)
+# IAM roles that ci is allowed to pass to ECS (and ONLY to ECS)
 ecs_task_execution_role_name = "arrise-ecs-task-execution-role"
 ecs_task_role_name           = "arrise-ecs-task-role"
 

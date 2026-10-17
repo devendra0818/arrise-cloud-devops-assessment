@@ -6,15 +6,15 @@ locals {
   }
 
   users = toset([
-    "arrise-engine",
-    "arrise-ci",
-    "arrise-alice",
-    "arrise-bob"
+    "engine",
+    "ci",
+    "alice",
+    "bob"
   ])
 
   group_members = {
-    "arrise-group1" = ["arrise-engine", "arrise-ci"]
-    "arrise-group2" = ["arrise-alice", "arrise-bob"]
+    "group1" = ["engine", "ci"]
+    "group2" = ["alice", "bob"]
   }
 }
 resource "aws_iam_user" "users" {
@@ -41,15 +41,15 @@ resource "aws_iam_group_membership" "members" {
   users = [for user in each.value : aws_iam_user.users[user].name]
 }
 
-resource "aws_iam_group_policy_attachment" "group2_power_user" {
+resource "aws_iam_group_policy_attachment" "group2_admin" {
   provider   = aws.account_a
-  group      = aws_iam_group.groups["arrise-group2"].name
-  policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"
+  group      = aws_iam_group.groups["group2"].name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
 
 resource "aws_iam_role" "roleA" {
   provider = aws.account_a
-  name     = "arrise-roleA"
+  name     = "roleA"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -58,7 +58,7 @@ resource "aws_iam_role" "roleA" {
       Principal = { AWS = "arn:aws:iam::${var.account_a_id}:root" }
     }]
   })
-  tags = merge(local.common_tags, { Name = "arrise-roleA" })
+  tags = merge(local.common_tags, { Name = "roleA" })
 }
 
 resource "aws_iam_role_policy" "roleA_admin_except_iam" {
@@ -77,7 +77,7 @@ resource "aws_iam_role_policy" "roleA_admin_except_iam" {
 
 resource "aws_iam_role" "roleB" {
   provider = aws.account_a
-  name     = "arrise-roleB"
+  name     = "roleB"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -86,7 +86,7 @@ resource "aws_iam_role" "roleB" {
       Principal = { AWS = "arn:aws:iam::${var.account_a_id}:root" }
     }]
   })
-  tags = merge(local.common_tags, { Name = "arrise-roleB" })
+  tags = merge(local.common_tags, { Name = "roleB" })
 }
 
 resource "aws_iam_role_policy" "roleB_assume_roleC" {
@@ -98,7 +98,7 @@ resource "aws_iam_role_policy" "roleB_assume_roleC" {
     Statement = [{
       Effect   = "Allow"
       Action   = "sts:AssumeRole"
-      Resource = "arn:aws:iam::${var.account_b_id}:role/arrise-roleC"
+      Resource = "arn:aws:iam::${var.account_b_id}:role/roleC"
     }]
   })
 }

@@ -5,18 +5,18 @@ data "aws_iam_policy_document" "roleC_trust" {
 
     principals {
       type        = "AWS"
-      identifiers = ["arn:aws:iam::${var.account_a_id}:role/arrise-roleB"]
+      identifiers = ["arn:aws:iam::${var.account_a_id}:role/roleB"]
     }
   }
 }
 
 resource "aws_iam_role" "roleC" {
-  name               = "arrise-roleC"
+  name               = "roleC"
   assume_role_policy = data.aws_iam_policy_document.roleC_trust.json
 }
 
 resource "aws_iam_role_policy" "roleC_s3" {
-  name = "arrise-roleC-s3-access"
+  name = "roleC-s3-access"
   role = aws_iam_role.roleC.id
 
   policy = jsonencode({

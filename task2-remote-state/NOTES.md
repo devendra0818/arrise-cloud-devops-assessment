@@ -1,9 +1,10 @@
 # Task 2 Remote State and Locking
 
-Task 1 already uses the shared `arrise-devops-tfstate` S3 bucket. This task reuses that
-bucket for its own state key and enables the S3 backend lockfile with `use_lockfile = true`.
+Task 1 and this task use the shared `arrise-devops-tfstate` S3 bucket, with separate
+state keys. The backend enables S3-native locking with `use_lockfile = true`.
 Terraform writes a temporary `.tflock` object beside the state object while a state-writing
 operation is in progress. No DynamoDB table is configured or needed for this lockfile.
+The backend also requires AWS credentials with access to the existing state bucket.
 
 With independent local state files, two people can plan from different snapshots, both
 change the same infrastructure, and leave their state files disagreeing with AWS. A shared
@@ -17,5 +18,7 @@ Initialize this task with:
 terraform init -backend-config=env/sandbox/backend.tfvars
 ```
 
-HashiCorp has deprecated DynamoDB-based S3 locking in favor of S3 lockfiles. The backend
-uses S3 locking directly, so this task does not provision a DynamoDB lock table.
+The assignment asks for DynamoDB locking. DynamoDB locking is deprecated, but it is not
+unsupported. This configuration uses Terraform's S3-native lockfile instead, so it does
+not create or depend on a DynamoDB table. The S3 bucket must already exist; enable bucket
+versioning so previous state versions can be recovered.

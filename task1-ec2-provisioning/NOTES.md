@@ -9,6 +9,11 @@ The sandbox environment supplies the AMI and subnet IDs in `env/sandbox/variable
 Keep both IDs in the same AWS region, and ensure the subnet belongs to the VPC intended
 for this deployment.
 
+The five key-pair names in the instance map must already exist in the selected AWS
+account and region. Terraform intentionally does not generate or store private keys.
+Replace the example names with existing key pairs before applying; AWS previously
+reported these configured names as not found.
+
 ## Which instance has `prevent_destroy = true` and why?
 
 The **`db-server`** instance is protected with `lifecycle { prevent_destroy = true }`.

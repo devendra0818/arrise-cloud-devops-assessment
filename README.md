@@ -1,7 +1,7 @@
 # Arrise Cloud DevOps Assessment
 
 > **Terraform state bucket:** `arrise-devops-tfstate`
-> **All resource names:** prefixed with `arrise-`
+> **Naming:** EC2 and supporting resources use descriptive names; Task 3 uses the exact IAM names in the assignment.
 > **Structure:** Industry-standard environment-driven layout (`env/sandbox/`)
 
 ---
@@ -35,8 +35,8 @@ arrise-cloud-devops-assessment/
 │   ├── versions.tf
 │   ├── provider.tf               # Dual-account aliases (account_a, account_b)
 │   ├── variables.tf
-│   ├── account_a.tf              # arrise-group1/2, arrise-engine/ci/alice/bob, arrise-roleA/roleB
-│   ├── account_b.tf              # arrise-roleC, arrise-artifacts-bucket
+│   ├── account_a.tf              # group1/2, engine/ci/alice/bob, roleA/roleB
+│   ├── account_b.tf              # roleC, arrise-artifacts-bucket
 │   ├── NOTES.md                  # Answers to both design questions
 │   └── env/
 │       └── sandbox/
@@ -47,7 +47,7 @@ arrise-cloud-devops-assessment/
 │   ├── versions.tf
 │   ├── provider.tf
 │   ├── variables.tf
-│   ├── main.tf                   # arrise-ci-least-privilege-policy (ECR push, ECS deploy, S3 read)
+│   ├── main.tf                   # Custom policy attached to ci (ECR push, ECS deploy, S3 read)
 │   ├── NOTES.md                  # What was included, what was left out and why
 │   └── env/
 │       └── sandbox/
@@ -58,7 +58,7 @@ arrise-cloud-devops-assessment/
 │   ├── versions.tf
 │   ├── provider.tf
 │   ├── variables.tf
-│   ├── fixed_roleC.tf            # Broken original (commented) + fixed arrise-roleC
+│   ├── fixed_roleC.tf            # Fixed roleC trust and bucket-scoped S3 policy
 │   ├── NOTES.md                  # Root cause of both bugs
 │   └── env/
 │       └── sandbox/
@@ -73,7 +73,7 @@ arrise-cloud-devops-assessment/
 
 ## How to Run Each Task
 
-All tasks follow the **same three-command workflow**:
+Run commands from the relevant task directory. Tasks 1, 3, 4, and 5 use this workflow:
 
 ```bash
 # 1. Initialise – injects S3 backend config from the environment file
@@ -88,6 +88,9 @@ terraform apply -var-file=env/sandbox/variables.tfvars
 
 Task 2 has no managed AWS resources of its own; it demonstrates the S3 backend and lock
 configuration. Initialize it with `terraform init -backend-config=env/sandbox/backend.tfvars`.
+Apply Task 3 before Task 4 because the policy attaches to the `ci` user created in Task 3.
+Task 5 is a standalone corrected example of the same `roleC` created in Task 3; do not
+apply both as separate states to the same accounts.
 
 ---
 
@@ -103,15 +106,21 @@ Every task writes its state to a unique key in the **`arrise-devops-tfstate`** b
 | Task 4 | `task4-iam-policy/sandbox/terraform.tfstate` |
 | Task 5 | `task5-bug-fix/sandbox/terraform.tfstate` |
 
-Task 2 uses S3 state locking with `use_lockfile = true`. Terraform creates a `.tflock`
-object beside the state while a state-writing operation is in progress. HashiCorp has
-deprecated DynamoDB-based S3 locking in favor of S3 lockfiles; Task 2 does not provision a
-DynamoDB lock table.
+All five backends use S3-native state locking with `use_lockfile = true`. Terraform creates
+a `.tflock` object beside each state while a state-writing operation is in progress. The
+original assignment asks for DynamoDB locking; DynamoDB locking is deprecated, not
+unsupported. This submission uses S3-native locking instead and does not provision or
+require a DynamoDB lock table. Terraform 1.10 or later is required.
 
 With separate local state files, two people can plan from different snapshots, make
 conflicting changes, and leave state files that disagree with AWS. Task 2 uses the shared
 S3 bucket already used by Task 1, with its own state key. The S3 lockfile prevents
 concurrent Terraform runs using that backend state from writing at the same time.
+
+The state bucket must exist before `terraform init`; enable S3 versioning to recover
+previous state versions. Task 3 requires two configured AWS CLI profiles, one for each
+account. The account IDs in sandbox variable files are assignment placeholders and must
+match the authenticated accounts before applying.
 
 ---
 
@@ -133,11 +142,11 @@ terraform apply  -var-file=env/production/variables.tfvars
 | Resource | Name |
 |----------|------|
 | Terraform state bucket | `arrise-devops-tfstate` |
-| DynamoDB lock table (Tasks 3–5) | `arrise-terraform-state-lock` |
+| State locking | S3 lockfile (`use_lockfile = true`) |
 | EC2 instances | `arrise-<role>` (e.g. `arrise-db-server`) |
-| IAM groups | `arrise-group1`, `arrise-group2` |
-| IAM users | `arrise-engine`, `arrise-ci`, `arrise-alice`, `arrise-bob` |
-| IAM roles | `arrise-roleA`, `arrise-roleB`, `arrise-roleC` |
+| IAM groups | `group1`, `group2` |
+| IAM users | `engine`, `ci`, `alice`, `bob` |
+| IAM roles | `roleA`, `roleB`, `roleC` |
 | IAM policy | `arrise-ci-least-privilege-policy` |
 | ECR repository | `arrise-app` |
 | ECS cluster / service | `arrise-cluster` / `arrise-service` |
@@ -150,6 +159,6 @@ terraform apply  -var-file=env/production/variables.tfvars
 
 | Tool | Version |
 |------|---------|
-| Terraform | ≥ 1.10.0 for Task 2 S3 lockfiles; ≥ 1.3.0 for other tasks |
+| Terraform | ≥ 1.10.0 (S3-native lockfiles are used by every task backend) |
 | AWS CLI | ≥ 2.x |
 | AWS Provider | ~> 5.0 |

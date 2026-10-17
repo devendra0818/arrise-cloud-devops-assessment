@@ -6,6 +6,7 @@
 # ─────────────────────────────────────────────────────────────
 
 aws_region  = "us-east-1"
+aws_profile = "arrise-account-b"
 environment = "sandbox"
 owner       = "arrise-devops-team"
 

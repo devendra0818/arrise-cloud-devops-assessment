@@ -23,6 +23,16 @@ variable "account_b_id" {
   type        = string
 }
 
+variable "account_a_profile" {
+  description = "AWS CLI profile authenticated to Account A"
+  type        = string
+}
+
+variable "account_b_profile" {
+  description = "AWS CLI profile authenticated to Account B"
+  type        = string
+}
+
 variable "artifacts_bucket_name" {
   description = "Name of the S3 bucket in Account B that roleC manages"
   type        = string
