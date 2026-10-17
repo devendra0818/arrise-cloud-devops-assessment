@@ -15,9 +15,12 @@ arrise-cloud-devops-assessment/
 │   ├── versions.tf               # Terraform + provider version constraints; empty backend "s3" {}
 │   ├── provider.tf               # AWS provider (region from variable)
 │   ├── variables.tf              # Declarations only – no defaults
-│   ├── main.tf                   # 5 EC2 instances via for_each on var.instances
+│   ├── main.tf                   # Calls reusable EC2 module
+│   ├── local.tf                  # Shared tags and lifecycle grouping
 │   ├── outputs.tf                # instance_ids and instance_private_ips maps
 │   ├── NOTES.md                  # Why arrise-db-server is prevent_destroy=true
+│   ├── modules/
+│   │   └── ec2_instance/         # Reusable EC2 instance implementation
 │   └── env/
 │       └── sandbox/
 │           ├── backend.tfvars    # S3 bucket, key, DynamoDB table

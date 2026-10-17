@@ -1,5 +1,14 @@
 # NOTES.md – Task 1: Multi-Instance EC2 Provisioning
 
+The root configuration passes the single `instances` map into the reusable
+`modules/ec2_instance` module. The root `local.tf` prepares shared tags and separates
+the protected database instance from the other instances because Terraform requires
+`lifecycle.prevent_destroy` to be a literal value.
+
+The sandbox environment supplies the AMI and subnet IDs in `env/sandbox/variables.tfvars`.
+Keep both IDs in the same AWS region, and ensure the subnet belongs to the VPC intended
+for this deployment.
+
 ## Which instance has `prevent_destroy = true` and why?
 
 The **`db-server`** instance is protected with `lifecycle { prevent_destroy = true }`.

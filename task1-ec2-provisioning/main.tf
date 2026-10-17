@@ -1,77 +1,20 @@
-locals {
-  # Separate instances into two groups because lifecycle.prevent_destroy
-  # cannot be set dynamically in Terraform — it must be a literal value.
-  # Both groups are driven by the same single var.instances map.
-  protected_instances = {
-    for name, cfg in var.instances : name => cfg if cfg.prevent_destroy == true
-  }
-  normal_instances = {
-    for name, cfg in var.instances : name => cfg if cfg.prevent_destroy == false
-  }
+module "ec2_instances" {
+  source = "./modules/ec2_instance"
 
-  # Common tags applied to every resource
-  common_tags = {
-    Environment = var.environment
-    Owner       = var.owner
-    ManagedBy   = "terraform"
-  }
+  ami_id              = var.ami_id
+  subnet_id           = var.subnet_id
+  normal_instances    = local.normal_instances
+  protected_instances = local.protected_instances
+  common_tags         = local.common_tags
 }
 
-# ── Normal instances (prevent_destroy = false) ──────────────────────────────
-resource "aws_instance" "normal" {
-  for_each = local.normal_instances
-
-  ami           = var.ami_id
-  instance_type = each.value.instance_type
-  subnet_id     = var.subnet_id
-  key_name      = each.value.key_name
-
-  root_block_device {
-    volume_type = each.value.volume_type
-    volume_size = each.value.volume_size
-
-    # io1/io2 require explicit IOPS
-    iops = contains(["io1", "io2"], each.value.volume_type) ? 3000 : null
-
-    tags = merge(local.common_tags, {
-      Name = "arrise-${each.key}-root-volume"
-    })
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "arrise-${each.key}"
-  })
-
-  lifecycle {
-    prevent_destroy = false
-  }
+# Preserve existing state addresses while moving the EC2 resources into a module.
+moved {
+  from = aws_instance.normal
+  to   = module.ec2_instances.aws_instance.normal
 }
 
-# ── Protected instances (prevent_destroy = true) ──────────────────────────────
-# "arrise-db-server" is the chosen protected instance — see NOTES.md for rationale.
-resource "aws_instance" "protected" {
-  for_each = local.protected_instances
-
-  ami           = var.ami_id
-  instance_type = each.value.instance_type
-  subnet_id     = var.subnet_id
-  key_name      = each.value.key_name
-
-  root_block_device {
-    volume_type = each.value.volume_type
-    volume_size = each.value.volume_size
-    iops        = contains(["io1", "io2"], each.value.volume_type) ? 3000 : null
-
-    tags = merge(local.common_tags, {
-      Name = "arrise-${each.key}-root-volume"
-    })
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "arrise-${each.key}"
-  })
-
-  lifecycle {
-    prevent_destroy = true
-  }
+moved {
+  from = aws_instance.protected
+  to   = module.ec2_instances.aws_instance.protected
 }

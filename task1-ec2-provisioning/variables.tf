@@ -28,8 +28,7 @@ variable "subnet_id" {
   type        = string
 }
 
-# Single variable map that drives ALL 5 EC2 instances.
-# No separate resource blocks per instance; a single for_each iterates over this map.
+# Single variable map that drives all EC2 instances through the reusable module.
 variable "instances" {
   description = "Map of EC2 instance configurations"
   type = map(object({

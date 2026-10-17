@@ -9,9 +9,8 @@ aws_region  = "us-east-1"
 environment = "sandbox"
 owner       = "arrise-devops-team"
 
-# Replace with the actual AMI ID for your region (Amazon Linux 2023 in us-east-1)
-ami_id    = "ami-0c55b159cbfafe1f0"
-subnet_id = "subnet-xxxxxxxxxxxxxxxxx"
+ami_id    = "ami-0567589d25e06853e"
+subnet_id = "subnet-012c76a5661003d86"
 
 # Single map drives ALL 5 EC2 instances via for_each.
 # Resource names will be prefixed with "arrise-" automatically in main.tf.
