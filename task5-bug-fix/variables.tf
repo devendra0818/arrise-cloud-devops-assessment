@@ -18,6 +18,11 @@ variable "account_a_id" {
   type        = string
 }
 
+variable "account_b_id" {
+  description = "Account B ID (where arrise-roleC is created)"
+  type        = string
+}
+
 variable "artifacts_bucket_name" {
   description = "The single named S3 bucket that arrise-roleC has full access to"
   type        = string
