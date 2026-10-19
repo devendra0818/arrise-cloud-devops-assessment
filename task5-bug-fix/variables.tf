@@ -1,0 +1,34 @@
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+}
+
+variable "aws_profile" {
+  description = "AWS CLI profile for Account B"
+  type        = string
+}
+
+variable "environment" {
+  description = "Deployment environment"
+  type        = string
+}
+
+variable "owner" {
+  description = "Owner tag value"
+  type        = string
+}
+
+variable "account_a_id" {
+  description = "Account A ID (where roleB lives)"
+  type        = string
+}
+
+variable "account_b_id" {
+  description = "Account B ID (where roleC is created)"
+  type        = string
+}
+
+variable "artifacts_bucket_name" {
+  description = "The single named S3 bucket that roleC has full access to"
+  type        = string
+}
